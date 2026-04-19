@@ -188,7 +188,71 @@
 // }
 
 // 
+// import { useEffect, useState } from "react";
+
+// const defaultDailyData = [
+//   { day: "Mon", units: 8 },
+//   { day: "Tue", units: 10 },
+//   { day: "Wed", units: 7 },
+//   { day: "Thu", units: 12 },
+//   { day: "Fri", units: 9 },
+//   { day: "Sat", units: 11 },
+//   { day: "Sun", units: 13 },
+// ];
+
+// export default function CarbonTracker() {
+//   const emissionFactor = 0.695;
+
+//   const [dailyData, setDailyData] = useState(() => {
+//     return JSON.parse(localStorage.getItem("dailyEnergyData")) || defaultDailyData;
+//   });
+
+//   useEffect(() => {
+//     const savedData = JSON.parse(localStorage.getItem("dailyEnergyData"));
+//     if (savedData) {
+//       setDailyData(savedData);
+//     }
+//   }, []);
+
+//   const totalUnits = dailyData.reduce((sum, item) => sum + item.units, 0);
+
+//   const carbonKg = (totalUnits * emissionFactor).toFixed(2);
+//   const treesNeeded = (Number(carbonKg) / 21.77).toFixed(2);
+
+//   return (
+//     <div className="page">
+//       <div className="page-title-row">
+//         <h1>Carbon Tracker</h1>
+//       </div>
+
+//       <div className="stats-grid">
+//         <div className="premium-card stat-box">
+//           <p>Total Energy Used</p>
+//           <h3>{totalUnits.toFixed(2)} kWh</h3>
+//         </div>
+
+//         <div className="premium-card stat-box">
+//           <p>Estimated CO₂</p>
+//           <h3>{carbonKg} kg</h3>
+//         </div>
+
+//         <div className="premium-card stat-box">
+//           <p>Trees Needed</p>
+//           <h3>{treesNeeded}</h3>
+//         </div>
+//       </div>
+
+//       <div className="premium-card">
+//         <h2>Calculation Method</h2>
+//         <p>Carbon = Total Energy × 0.695 kg CO₂ per kWh</p>
+//         <p>This is calculated automatically based on monitored energy data.</p>
+//       </div>
+//     </div>
+//   );
+// }
+
 import { useEffect, useState } from "react";
+import { FaLeaf, FaCloud, FaTree } from "react-icons/fa";
 
 const defaultDailyData = [
   { day: "Mon", units: 8 },
@@ -209,23 +273,26 @@ export default function CarbonTracker() {
 
   useEffect(() => {
     const savedData = JSON.parse(localStorage.getItem("dailyEnergyData"));
-    if (savedData) {
-      setDailyData(savedData);
-    }
+    if (savedData) setDailyData(savedData);
   }, []);
 
   const totalUnits = dailyData.reduce((sum, item) => sum + item.units, 0);
-
   const carbonKg = (totalUnits * emissionFactor).toFixed(2);
   const treesNeeded = (Number(carbonKg) / 21.77).toFixed(2);
 
   return (
     <div className="page">
       <div className="page-title-row">
-        <h1>Carbon Tracker</h1>
+        <div>
+          <p className="section-tag">Carbon Module</p>
+          <h1>Carbon Tracker</h1>
+          <p className="subtext">
+            Carbon footprint is calculated automatically from monitored energy usage
+          </p>
+        </div>
       </div>
 
-      <div className="stats-grid">
+      <section className="stats-grid">
         <div className="premium-card stat-box">
           <p>Total Energy Used</p>
           <h3>{totalUnits.toFixed(2)} kWh</h3>
@@ -240,12 +307,42 @@ export default function CarbonTracker() {
           <p>Trees Needed</p>
           <h3>{treesNeeded}</h3>
         </div>
-      </div>
+
+        <div className="premium-card stat-box">
+          <p>Emission Factor</p>
+          <h3>0.695</h3>
+        </div>
+      </section>
+
+      <section className="two-col-grid">
+        <div className="premium-card">
+          <p className="section-tag">Environmental Impact</p>
+          <h2>Carbon Insight</h2>
+          <p className="info-text">
+            The application derives total weekly energy usage from the monitoring
+            module and applies the emission factor to estimate carbon output.
+          </p>
+          <div className="highlight-number">{carbonKg} kg</div>
+        </div>
+
+        <div className="premium-card">
+          <p className="section-tag">Equivalent View</p>
+          <h2>Green Compensation</h2>
+          <p className="info-text">
+            Approximate number of trees required to offset the estimated carbon
+            emission based on the current monitored energy data.
+          </p>
+          <div className="highlight-number">{treesNeeded}</div>
+        </div>
+      </section>
 
       <div className="premium-card">
-        <h2>Calculation Method</h2>
-        <p>Carbon = Total Energy × 0.695 kg CO₂ per kWh</p>
-        <p>This is calculated automatically based on monitored energy data.</p>
+        <p className="section-tag">Method</p>
+        <h2>Calculation Logic</h2>
+        <p className="info-text">Carbon = Total Energy × 0.695 kg CO₂ per kWh</p>
+        <p className="info-text">
+          This value is generated from your monitored energy usage, not from a manually entered random value.
+        </p>
       </div>
     </div>
   );
