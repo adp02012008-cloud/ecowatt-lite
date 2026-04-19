@@ -1,28 +1,39 @@
-import { Link } from "react-router-dom";
-
 export default function Recommendations() {
   const recommendations = [
-    "Reduce AC usage during peak evening hours.",
-    "Switch off lights and fans when not in use.",
-    "Use LED bulbs to reduce electricity consumption.",
-    "Run heavy appliances during low-demand periods.",
-    "Monitor refrigerator and cooling settings regularly.",
+    {
+      title: "Reduce Peak-Hour AC Load",
+      text: "Limit AC usage during high-demand evening periods to reduce energy spikes.",
+    },
+    {
+      title: "Shift Heavy Appliance Usage",
+      text: "Use washing machines and water heaters during lower-demand periods.",
+    },
+    {
+      title: "Improve Lighting Efficiency",
+      text: "Replace conventional bulbs with LED lights to reduce electricity consumption.",
+    },
+    {
+      title: "Smart Cooling Practices",
+      text: "Set AC temperatures optimally and maintain clean filters for better efficiency.",
+    },
   ];
 
   return (
     <div className="page">
-      <div className="topbar">
-        <h1>Smart Recommendations</h1>
-        <Link to="/" className="btn">Back</Link>
+      <div className="page-title-row">
+        <div>
+          <p className="section-tag">Smart Guidance</p>
+          <h1>Recommendations</h1>
+        </div>
       </div>
 
-      <div className="card">
-        <h2>Energy Saving Tips</h2>
-        <ul className="list">
-          {recommendations.map((item, index) => (
-            <li key={index}>{item}</li>
-          ))}
-        </ul>
+      <div className="recommend-grid">
+        {recommendations.map((item, index) => (
+          <div className="premium-card recommendation-card" key={index}>
+            <h2>{item.title}</h2>
+            <p className="info-text">{item.text}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

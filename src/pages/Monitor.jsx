@@ -1,12 +1,11 @@
-import { Link } from "react-router-dom";
 import {
+  ResponsiveContainer,
   LineChart,
   Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   BarChart,
   Bar,
 } from "recharts";
@@ -37,48 +36,56 @@ export default function Monitor() {
 
   return (
     <div className="page">
-      <div className="topbar">
-        <h1>Energy Monitoring</h1>
-        <Link to="/" className="btn">Back</Link>
-      </div>
-
-      <div className="stats-row">
-        <div className="card">
-          <h3>Total Weekly Units</h3>
-          <p className="big-value">{totalUnits} kWh</p>
-        </div>
-
-        <div className="card">
-          <h3>Peak Usage Day</h3>
-          <p className="big-value">{peakDay.day}</p>
-          <p>{peakDay.units} kWh</p>
+      <div className="page-title-row">
+        <div>
+          <p className="section-tag">Monitoring Module</p>
+          <h1>Energy Monitoring</h1>
         </div>
       </div>
 
-      <div className="card">
-        <h2>Weekly Energy Trend</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={dailyData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="day" />
-            <YAxis />
-            <Tooltip />
-            <Line type="monotone" dataKey="units" strokeWidth={3} />
-          </LineChart>
-        </ResponsiveContainer>
+      <div className="stats-grid">
+        <div className="premium-card stat-box">
+          <p>Total Weekly Units</p>
+          <h3>{totalUnits} kWh</h3>
+        </div>
+        <div className="premium-card stat-box">
+          <p>Peak Usage Day</p>
+          <h3>{peakDay.day}</h3>
+        </div>
+        <div className="premium-card stat-box">
+          <p>Highest Usage</p>
+          <h3>{peakDay.units} kWh</h3>
+        </div>
       </div>
 
-      <div className="card">
-        <h2>Appliance Usage</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={applianceData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="units" />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="chart-grid">
+        <div className="premium-card">
+          <p className="section-tag">Trend Analysis</p>
+          <h2>Weekly Usage Trend</h2>
+          <ResponsiveContainer width="100%" height={320}>
+            <LineChart data={dailyData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="day" />
+              <YAxis />
+              <Tooltip />
+              <Line type="monotone" dataKey="units" strokeWidth={3} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="premium-card">
+          <p className="section-tag">Breakdown</p>
+          <h2>Appliance Consumption</h2>
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={applianceData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="units" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 
 export default function CarbonTracker() {
   const [units, setUnits] = useState("");
@@ -10,8 +9,8 @@ export default function CarbonTracker() {
   function calculateCarbon() {
     const value = parseFloat(units);
 
-    if (isNaN(value) || value < 0) {
-      alert("Please enter valid kWh.");
+    if (isNaN(value) || value <= 0) {
+      alert("Please enter valid electricity usage in kWh.");
       return;
     }
 
@@ -27,43 +26,61 @@ export default function CarbonTracker() {
 
   return (
     <div className="page">
-      <div className="topbar">
-        <h1>Carbon Tracker</h1>
-        <Link to="/" className="btn">Back</Link>
+      <div className="page-title-row">
+        <div>
+          <p className="section-tag">Carbon Module</p>
+          <h1>Carbon Tracker</h1>
+          <p className="subtext">
+            Estimate carbon footprint using actual electricity usage input.
+          </p>
+        </div>
       </div>
 
-      <div className="card">
+      <div className="premium-card input-card">
         <h2>Enter Electricity Usage</h2>
-        <input
-          type="number"
-          value={units}
-          onChange={(e) => setUnits(e.target.value)}
-          placeholder="Enter kWh"
-          className="input"
-        />
-        <button onClick={calculateCarbon} className="btn primary">
-          Calculate
-        </button>
+        <p className="info-text">
+          Use your meter reading or EB bill units to calculate estimated carbon
+          emissions.
+        </p>
+
+        <div className="input-row">
+          <input
+            type="number"
+            value={units}
+            onChange={(e) => setUnits(e.target.value)}
+            placeholder="Enter kWh"
+            className="premium-input"
+          />
+          <button onClick={calculateCarbon} className="primary-btn">
+            Calculate
+          </button>
+        </div>
       </div>
 
       {result && (
-        <div className="stats-row">
-          <div className="card">
-            <h3>Electricity Used</h3>
-            <p className="big-value">{result.units} kWh</p>
+        <div className="stats-grid">
+          <div className="premium-card stat-box">
+            <p>Electricity Used</p>
+            <h3>{result.units} kWh</h3>
           </div>
-
-          <div className="card">
-            <h3>Estimated CO₂</h3>
-            <p className="big-value">{result.carbonKg} kg</p>
+          <div className="premium-card stat-box">
+            <p>Estimated CO₂</p>
+            <h3>{result.carbonKg} kg</h3>
           </div>
-
-          <div className="card">
-            <h3>Trees Needed</h3>
-            <p className="big-value">{result.treesNeeded}</p>
+          <div className="premium-card stat-box">
+            <p>Trees Needed</p>
+            <h3>{result.treesNeeded}</h3>
           </div>
         </div>
       )}
+
+      <div className="premium-card">
+        <p className="section-tag">Method</p>
+        <h2>Calculation Logic</h2>
+        <p className="info-text">
+          Estimated CO₂ = Electricity Used × 0.695 kg CO₂/kWh
+        </p>
+      </div>
     </div>
   );
 }
