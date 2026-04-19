@@ -337,6 +337,8 @@
 //   );
 // }
 
+// 
+
 import { useEffect, useState } from "react";
 import {
   FaArrowRight,
@@ -365,9 +367,7 @@ export default function Home() {
 
   useEffect(() => {
     const savedData = JSON.parse(localStorage.getItem("dailyEnergyData"));
-    if (savedData) {
-      setDailyData(savedData);
-    }
+    if (savedData) setDailyData(savedData);
   }, []);
 
   const totalUnits = dailyData.reduce((sum, item) => sum + item.units, 0);
@@ -386,24 +386,26 @@ export default function Home() {
     return "Low";
   }
 
-  function getEcoScore() {
-    if (carbonKg >= 50) return 58;
-    if (carbonKg >= 35) return 74;
-    return 90;
-  }
+  function getEcoScore(carbon) {
+  const maxCarbon = 80; // worst case limit
+
+  let score = 100 - (carbon / maxCarbon) * 80;
+
+  return Math.max(20, Math.min(100, Math.round(score)));
+}
 
   const carbonStatus = getCarbonStatus();
-  const ecoScore = getEcoScore();
+  const ecoScore = getEcoScore(carbonKg);
 
   return (
     <div className="page">
-      <section className="hero premium-hero">
+      <section className="premium-hero">
         <div>
           <p className="section-tag">Smart Energy Platform</p>
           <h1>EcoWatt Lite Dashboard</h1>
           <p className="hero-text">
-            Monitor usage, estimate carbon impact, predict next-day consumption,
-            and guide users toward more sustainable energy behavior.
+            Monitor electricity usage, predict next-day demand, estimate carbon
+            footprint, and guide users toward sustainable energy behavior.
           </p>
 
           <div className="hero-actions">
@@ -415,7 +417,7 @@ export default function Home() {
         <div className="hero-side-card">
           <p className="mini-label">Next-Day Prediction</p>
           <h2>{predictedUnits} kWh</h2>
-          <span>Based on recent usage pattern</span>
+          <span>Based on the recent 3-day usage pattern</span>
         </div>
       </section>
 
@@ -454,17 +456,23 @@ export default function Home() {
             <FaBolt />
             <span>User Energy Data</span>
           </div>
+
           <FaArrowRight className="flow-arrow" />
+
           <div className="flow-node">
             <FaBrain />
             <span>Prediction Logic</span>
           </div>
+
           <FaArrowRight className="flow-arrow" />
+
           <div className="flow-node">
             <FaLeaf />
             <span>Carbon Analysis</span>
           </div>
+
           <FaArrowRight className="flow-arrow" />
+
           <div className="flow-node">
             <FaLightbulb />
             <span>Smart Recommendations</span>
@@ -477,8 +485,9 @@ export default function Home() {
           <p className="section-tag">AI Insight</p>
           <h2>Main Prediction</h2>
           <p className="info-text">
-            The system estimates next-day consumption using recent energy
-            patterns.
+            The system estimates the next day’s electricity usage using recent
+            consumption behavior. This prototype uses recent-average logic and
+            can later be upgraded to machine learning.
           </p>
           <div className="highlight-number">{predictedUnits} kWh</div>
         </div>
@@ -487,8 +496,8 @@ export default function Home() {
           <p className="section-tag">Carbon Insight</p>
           <h2>Overview Status</h2>
           <p className="info-text">
-            Carbon status is automatically derived from total monitored energy
-            usage and updates with the latest day-wise data.
+            Carbon status is calculated automatically from the monitored weekly
+            energy data and reflects the current sustainability level.
           </p>
           <div className="highlight-number">{carbonStatus}</div>
         </div>
