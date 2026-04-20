@@ -278,7 +278,7 @@ export default function CarbonTracker() {
 
   const totalUnits = dailyData.reduce((sum, item) => sum + item.units, 0);
   const carbonKg = (totalUnits * emissionFactor).toFixed(2);
-  const treesNeeded = (Number(carbonKg) / 21.77).toFixed(2);
+  const treesNeeded = Math.ceil(Number(carbonKg) / 21.77);
 
   return (
     <div className="page">
