@@ -1,405 +1,149 @@
-// import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Chart from "chart.js/auto";
 
-// const defaultDailyData = [
-//   { day: "Mon", units: 8 },
-//   { day: "Tue", units: 10 },
-//   { day: "Wed", units: 7 },
-//   { day: "Thu", units: 12 },
-//   { day: "Fri", units: 9 },
-//   { day: "Sat", units: 11 },
-//   { day: "Sun", units: 13 },
-// ];
+const defaultDailyData   = [{ day:"Mon",units:8},{day:"Tue",units:10},{day:"Wed",units:7},{day:"Thu",units:12},{day:"Fri",units:9},{day:"Sat",units:11},{day:"Sun",units:13}];
+const defaultUsageHours  = { AC: 4, Fan: 8, Light: 6, Fridge: 24, TV: 3 };
 
-// const defaultUsageHours = {
-//   AC: 4,
-//   Fan: 8,
-//   Light: 6,
-//   Fridge: 24,
-//   TV: 3,
-// };
-
-// export default function Recommendations() {
-//   const [dailyData, setDailyData] = useState(() => {
-//     return JSON.parse(localStorage.getItem("dailyEnergyData")) || defaultDailyData;
-//   });
-
-//   const [usageHours, setUsageHours] = useState(() => {
-//     return JSON.parse(localStorage.getItem("applianceHours")) || defaultUsageHours;
-//   });
-
-//   useEffect(() => {
-//     const savedDaily = JSON.parse(localStorage.getItem("dailyEnergyData"));
-//     const savedHours = JSON.parse(localStorage.getItem("applianceHours"));
-
-//     if (savedDaily) setDailyData(savedDaily);
-//     if (savedHours) setUsageHours(savedHours);
-//   }, []);
-
-//   const totalUnits = dailyData.reduce((sum, d) => sum + d.units, 0);
-
-//   const peakDay = dailyData.reduce((max, d) =>
-//     d.units > max.units ? d : max
-//   );
-
-//   function generateRecommendations() {
-//     let recs = [];
-
-//     // 🔥 AC logic
-//     if (usageHours.AC >= 7) {
-//       recs.push({
-//         title: "⚠️ High AC Usage",
-//         text: "AC is used for long hours. Reduce usage or increase temperature to save energy.",
-//       });
-//     }
-
-//     // 🔥 Fan logic
-//     if (usageHours.Fan >= 10) {
-//       recs.push({
-//         title: "🌬️ Fan Overuse",
-//         text: "Fans are running for long hours. Turn off when not needed.",
-//       });
-//     }
-
-//     // 🔥 Total usage logic
-//     if (totalUnits >= 70) {
-//       recs.push({
-//         title: "📈 High Weekly Consumption",
-//         text: "Your weekly energy usage is high. Optimize heavy appliances usage.",
-//       });
-//     }
-
-//     // 🔥 Peak day logic
-//     if (peakDay.units >= 12) {
-//       recs.push({
-//         title: "📅 Peak Usage Day",
-//         text: `High usage detected on ${peakDay.day}. Try balancing usage across days.`,
-//       });
-//     }
-
-//     // 🔥 Light usage logic
-//     if (usageHours.Light >= 8) {
-//       recs.push({
-//         title: "💡 Lighting Efficiency",
-//         text: "Consider using LED lights and switching off unused lights.",
-//       });
-//     }
-
-//     // ✅ If no issues
-//     if (recs.length === 0) {
-//       recs.push({
-//         title: "✅ Efficient Usage",
-//         text: "Your energy usage is well optimized. Keep maintaining this pattern.",
-//       });
-//     }
-
-//     return recs;
-//   }
-
-//   const recommendations = generateRecommendations();
-
-//   return (
-//     <div className="page">
-//       <div className="page-title-row">
-//         <div>
-//           <p className="section-tag">Smart Guidance</p>
-//           <h1>Recommendations</h1>
-//           <p className="subtext">
-//             Personalized suggestions based on your real energy usage
-//           </p>
-//         </div>
-//       </div>
-
-//       <div className="recommend-grid">
-//         {recommendations.map((item, index) => (
-//           <div key={index} className="premium-card recommendation-card">
-//             <p className="section-tag">Insight {index + 1}</p>
-//             <h2>{item.title}</h2>
-//             <p className="info-text">{item.text}</p>
-//           </div>
-//         ))}
-//       </div>
-
-//       <div className="premium-card">
-//         <p className="section-tag">System Logic</p>
-//         <h2>How Recommendations Work</h2>
-//         <p className="info-text">
-//           Recommendations are generated dynamically based on appliance usage,
-//           weekly consumption, and peak usage patterns from the monitoring system.
-//         </p>
-//       </div>
-//     </div>
-//   );
-// }
-
-import { useMemo } from "react";
-
-const appliancePower = {
-  AC: 1.5,
-  Fan: 0.08,
-  Light: 0.05,
-  Fridge: 0.2,
-  TV: 0.1,
+const ICONS = {
+  AC:     <svg viewBox="0 0 24 24"><path d="M4 8a8 8 0 0116 0v8H4V8z"/><path d="M9 16v2a3 3 0 006 0v-2"/></svg>,
+  Fan:    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 9c0-3 2.5-5.5 5.5-5.5A5.5 5.5 0 0123 9c0 1.5-1.3 3-3 3H12"/></svg>,
+  Light:  <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="2"/><path d="M9 18h6"/><path d="M12 2a7 7 0 010 14"/></svg>,
+  Fridge: <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/></svg>,
+  TV:     <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>,
 };
 
-const defaultUsageHours = {
-  AC: 4,
-  Fan: 8,
-  Light: 6,
-  Fridge: 24,
-  TV: 3,
-};
+const PILL_COLORS = { AC: "blue", Fan: "teal", Light: "amber", Fridge: "purple", TV: "rose" };
 
-const defaultDailyData = [
-  { day: "Mon", units: 8 },
-  { day: "Tue", units: 10 },
-  { day: "Wed", units: 7 },
-  { day: "Thu", units: 12 },
-  { day: "Fri", units: 9 },
-  { day: "Sat", units: 11 },
-  { day: "Sun", units: 13 },
+const REC_STYLES = [
+  { bg: "rgba(192,53,74,0.07)",  border: "rgba(192,53,74,0.2)",  iconBg: "rgba(192,53,74,0.12)",  iconColor: "var(--rose)" },
+  { bg: "rgba(26,122,69,0.07)",  border: "rgba(26,122,69,0.2)",  iconBg: "rgba(26,122,69,0.12)",  iconColor: "var(--green)" },
+  { bg: "rgba(196,124,10,0.07)", border: "rgba(196,124,10,0.2)", iconBg: "rgba(196,124,10,0.12)", iconColor: "var(--amber)" },
+  { bg: "rgba(29,95,166,0.07)",  border: "rgba(29,95,166,0.2)",  iconBg: "rgba(29,95,166,0.12)",  iconColor: "var(--blue)" },
+  { bg: "rgba(109,68,184,0.07)", border: "rgba(109,68,184,0.2)", iconBg: "rgba(109,68,184,0.12)", iconColor: "var(--purple)" },
 ];
 
-const tariffRate = 8; // ₹ per kWh
-
 export default function Recommendations() {
-  const usageHours =
-    JSON.parse(localStorage.getItem("applianceHours")) || defaultUsageHours;
+  const radarRef  = useRef(null);
+  const radarInst = useRef(null);
 
-  const dailyData =
-    JSON.parse(localStorage.getItem("dailyEnergyData")) || defaultDailyData;
+  const [dailyData,   setDailyData]   = useState(() => JSON.parse(localStorage.getItem("dailyEnergyData"))  || defaultDailyData);
+  const [usageHours,  setUsageHours]  = useState(() => JSON.parse(localStorage.getItem("applianceHours"))   || defaultUsageHours);
 
-  const applianceData = useMemo(() => {
-    return Object.keys(appliancePower).map((name) => {
-      const units = +(appliancePower[name] * usageHours[name]).toFixed(2);
-      return {
-        name,
-        hours: usageHours[name],
-        units,
-        amount: +(units * tariffRate).toFixed(2),
-      };
+  useEffect(() => {
+    const d = JSON.parse(localStorage.getItem("dailyEnergyData"));
+    const h = JSON.parse(localStorage.getItem("applianceHours"));
+    if (d) setDailyData(d);
+    if (h) setUsageHours(h);
+  }, []);
+
+  const totalUnits = dailyData.reduce((s, d) => s + d.units, 0);
+  const peakDay    = dailyData.reduce((m, d) => d.units > m.units ? d : m);
+
+  function generateRecs() {
+    const recs = [];
+    if (usageHours.AC >= 7)    recs.push({ icon: ICONS.AC,    title: "Reduce AC Usage",       text: "Running too long. Raise thermostat 2°C or use a timer.", color: 0 });
+    if (usageHours.Fan >= 10)  recs.push({ icon: ICONS.Fan,   title: "Fan Overuse",            text: "Switch off when leaving the room.", color: 0 });
+    if (totalUnits >= 70)      recs.push({ icon: <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>, title: "High Weekly Usage", text: "Identify and reduce heavy appliances.", color: 2 });
+    if (peakDay.units >= 12)   recs.push({ icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>, title: `Peak: ${peakDay.day}`, text: `High usage on ${peakDay.day}. Distribute load evenly.`, color: 2 });
+    if (usageHours.Light >= 8) recs.push({ icon: ICONS.Light, title: "Switch to LED",          text: "Long lighting hours. Use LED bulbs + motion sensors.", color: 3 });
+    if (recs.length === 0)     recs.push({ icon: <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>, title: "All Good!", text: "Energy usage is well optimised. Keep it up!", color: 1 });
+    return recs;
+  }
+
+  const recs         = generateRecs();
+  const overallScore = recs.length === 1 && recs[0].title === "All Good!" ? "Excellent" : recs.length <= 2 ? "Good" : "Needs Work";
+  const bannerBg     = overallScore === "Excellent" ? "rgba(26,122,69,0.85)" : overallScore === "Good" ? "rgba(196,124,10,0.85)" : "rgba(192,53,74,0.85)";
+
+  const BannerIcon = () => {
+    const s = { width: 26, height: 26, stroke: "#fff", fill: "none", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
+    if (overallScore === "Excellent") return <svg viewBox="0 0 24 24" style={s}><polyline points="20 6 9 17 4 12"/></svg>;
+    if (overallScore === "Good")      return <svg viewBox="0 0 24 24" style={s}><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>;
+    return <svg viewBox="0 0 24 24" style={s}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
+  };
+
+  useEffect(() => {
+    if (radarInst.current) radarInst.current.destroy();
+    if (!radarRef.current) return;
+    const maxH = { AC: 12, Fan: 12, Light: 12, Fridge: 24, TV: 10 };
+    radarInst.current = new Chart(radarRef.current, {
+      type: "radar",
+      data: {
+        labels: ["AC", "Fan", "Light", "Fridge", "TV"],
+        datasets: [{
+          label: "Efficiency %",
+          data: Object.keys(maxH).map((k) => Math.round(100 - (usageHours[k] / maxH[k]) * 100)),
+          backgroundColor: "rgba(44,160,90,0.15)",
+          borderColor: "#2ca05a",
+          pointBackgroundColor: "#2ca05a",
+          pointRadius: 4,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { r: { min: 0, max: 100, ticks: { display: false }, grid: { color: "rgba(26,122,69,0.1)" }, pointLabels: { font: { family: "'Cabinet Grotesk', sans-serif", size: 11 } } } },
+      },
     });
+    return () => radarInst.current?.destroy();
   }, [usageHours]);
-
-  const totalApplianceUnits = useMemo(() => {
-    return applianceData.reduce((sum, item) => sum + item.units, 0);
-  }, [applianceData]);
-
-  const totalApplianceAmount = useMemo(() => {
-    return applianceData.reduce((sum, item) => sum + item.amount, 0).toFixed(2);
-  }, [applianceData]);
-
-  const totalDayUnits = useMemo(() => {
-    return dailyData.reduce((sum, item) => sum + item.units, 0);
-  }, [dailyData]);
-
-  const peakAppliance = useMemo(() => {
-    return applianceData.reduce((max, item) =>
-      item.units > max.units ? item : max
-    );
-  }, [applianceData]);
-
-  const peakDay = useMemo(() => {
-    return dailyData.reduce((max, item) =>
-      item.units > max.units ? item : max
-    );
-  }, [dailyData]);
-
-  const averageDayUnits = useMemo(() => {
-    return totalDayUnits / dailyData.length;
-  }, [totalDayUnits, dailyData.length]);
-
-  const lowestDay = useMemo(() => {
-    return dailyData.reduce((min, item) =>
-      item.units < min.units ? item : min
-    );
-  }, [dailyData]);
-
-  const cards = useMemo(() => {
-    const result = [];
-
-    if (peakAppliance.name === "AC" && peakAppliance.units >= 9) {
-      result.push({
-        title: "High Priority Alert",
-        type: "alert",
-        text: `AC is the highest energy-consuming appliance at ${peakAppliance.units} kWh and costs ₹${peakAppliance.amount}. Reducing AC runtime can significantly lower cost and total consumption.`,
-      });
-    } else if (peakDay.units >= 13) {
-      result.push({
-        title: "Peak-Day Alert",
-        type: "alert",
-        text: `${peakDay.day} has the highest day-wise usage at ${peakDay.units} kWh. Shift heavy appliance usage away from this day to reduce load and weekly cost.`,
-      });
-    } else {
-      result.push({
-        title: "System Status",
-        type: "positive",
-        text: "No extreme spike detected in current energy usage. Your overall usage pattern is relatively stable.",
-      });
-    }
-
-    if (usageHours.AC >= 7) {
-      const ac = applianceData.find((a) => a.name === "AC");
-      result.push({
-        title: "Cooling Optimization",
-        type: "warning",
-        text: `AC is used for ${usageHours.AC} hours and costs ₹${ac.amount}. Even a 1–2 hour reduction can save noticeable money and energy.`,
-      });
-    }
-
-    if (usageHours.Fan >= 12) {
-      const fan = applianceData.find((a) => a.name === "Fan");
-      result.push({
-        title: "Fan Usage Insight",
-        type: "warning",
-        text: `Fan usage is ${usageHours.Fan} hours and costs ₹${fan.amount}. Check whether all fans are needed continuously.`,
-      });
-    }
-
-    if (usageHours.Light >= 10) {
-      const light = applianceData.find((a) => a.name === "Light");
-      result.push({
-        title: "Lighting Recommendation",
-        type: "warning",
-        text: `Lighting usage costs ₹${light.amount}. Use LED bulbs and switch off unused lights to improve efficiency.`,
-      });
-    }
-
-    if (usageHours.TV >= 6) {
-      const tv = applianceData.find((a) => a.name === "TV");
-      result.push({
-        title: "Entertainment Load",
-        type: "info",
-        text: `TV usage is ${usageHours.TV} hours and costs ₹${tv.amount}. Reducing runtime can improve efficiency.`,
-      });
-    }
-
-    if (usageHours.Fridge === 24) {
-      const fridge = applianceData.find((a) => a.name === "Fridge");
-      result.push({
-        title: "Continuous Appliance Note",
-        type: "info",
-        text: `Fridge runs continuously and currently costs ₹${fridge.amount}. Keep cooling settings optimized to reduce unnecessary load.`,
-      });
-    }
-
-    if (peakDay.units - lowestDay.units >= 5) {
-      result.push({
-        title: "Weekly Variation Insight",
-        type: "info",
-        text: `There is a noticeable difference between your highest day (${peakDay.day}: ${peakDay.units} kWh) and lowest day (${lowestDay.day}: ${lowestDay.units} kWh). This indicates uneven weekly consumption.`,
-      });
-    } else {
-      result.push({
-        title: "Balanced Day-wise Usage",
-        type: "positive",
-        text: "Your day-wise usage is fairly balanced across the week.",
-      });
-    }
-
-    if (totalDayUnits >= 70 || totalApplianceUnits >= 12) {
-      result.push({
-        title: "Overall Efficiency Action",
-        type: "alert",
-        text: `Total monitored appliance cost is ₹${totalApplianceAmount}. Focus first on reducing AC runtime and avoiding heavy usage during peak days.`,
-      });
-    } else if (totalDayUnits >= 55 || totalApplianceUnits >= 9) {
-      result.push({
-        title: "Moderate Optimization Needed",
-        type: "warning",
-        text: `Your appliance cost is ₹${totalApplianceAmount}. Small improvements in appliance timing can reduce weekly expense.`,
-      });
-    } else {
-      result.push({
-        title: "Efficient Usage Pattern",
-        type: "positive",
-        text: `Your current appliance cost is ₹${totalApplianceAmount}. Maintain this usage pattern for better sustainability.`,
-      });
-    }
-
-    result.push({
-      title: "Suggested Action Plan",
-      type: "info",
-      text: `Use ${lowestDay.day} as your benchmark low-consumption day and try to follow similar appliance usage patterns on higher-consumption days.`,
-    });
-
-    return result;
-  }, [
-    peakAppliance,
-    peakDay,
-    lowestDay,
-    totalDayUnits,
-    totalApplianceUnits,
-    usageHours,
-    applianceData,
-    totalApplianceAmount,
-  ]);
-
-  function getBadgeClass(type) {
-    if (type === "alert") return "badge red-badge";
-    if (type === "warning") return "badge yellow-badge";
-    if (type === "positive") return "badge green-badge";
-    return "badge blue-badge";
-  }
-
-  function getScoreLabel() {
-    if (totalDayUnits >= 70 || totalApplianceUnits >= 12) return "Needs Improvement";
-    if (totalDayUnits >= 55 || totalApplianceUnits >= 9) return "Moderate";
-    return "Efficient";
-  }
 
   return (
     <div className="page">
+      <img className="page-img-strip" src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=75&fit=crop" alt="Smart office" />
+
       <div className="page-title-row">
+        <p className="section-tag">Smart Guidance</p>
+        <h1>Recommendations</h1>
+        <p className="subtext">Personalised tips from your energy data</p>
+      </div>
+
+      {/* Banner */}
+      <div className="premium-card" style={{ display: "flex", alignItems: "center", gap: 18, padding: "20px 24px", marginBottom: 16, background: bannerBg, border: "none" }}>
+        <div style={{ width: 52, height: 52, borderRadius: 15, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <BannerIcon />
+        </div>
         <div>
-          <p className="section-tag">Smart Guidance</p>
-          <h1>Recommendations</h1>
-          <p className="subtext">
-            Generated dynamically from Monitoring page appliance usage and day-wise energy data.
-          </p>
+          <p style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "1.5px", fontWeight: 700, color: "rgba(255,255,255,0.75)", fontFamily: "'Cabinet Grotesk', sans-serif" }}>Overall Status</p>
+          <h2 style={{ fontSize: 22, color: "#fff", marginTop: 2 }}>{overallScore}</h2>
+          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 3 }}>{recs.length} insight{recs.length !== 1 ? "s" : ""} found</p>
         </div>
       </div>
 
-      <div className="stats-grid">
-        <div className="premium-card stat-box">
-          <p>Total Day-wise Units</p>
-          <h3>{totalDayUnits.toFixed(2)} kWh</h3>
-        </div>
-
-        <div className="premium-card stat-box">
-          <p>Total Appliance Units</p>
-          <h3>{totalApplianceUnits.toFixed(2)} kWh</h3>
-        </div>
-
-        <div className="premium-card stat-box">
-          <p>Appliance Cost</p>
-          <h3>₹{totalApplianceAmount}</h3>
-        </div>
-
-        <div className="premium-card stat-box">
-          <p>Efficiency Status</p>
-          <h3>{getScoreLabel()}</h3>
-        </div>
+      {/* Rec cards */}
+      <div className="recommend-grid" style={{ marginBottom: 16 }}>
+        {recs.map((r, i) => {
+          const st = REC_STYLES[r.color] || REC_STYLES[0];
+          return (
+            <div key={i} className="premium-card recommendation-card" style={{ background: st.bg, borderColor: st.border }}>
+              <div className="rec-icon-wrap" style={{ background: st.iconBg, color: st.iconColor }}>{r.icon}</div>
+              <p className="section-tag" style={{ color: st.iconColor }}>Insight {i + 1}</p>
+              <h2>{r.title}</h2>
+              <p className="info-text">{r.text}</p>
+            </div>
+          );
+        })}
       </div>
 
+      {/* Radar */}
+      <div className="premium-card" style={{ marginBottom: 16 }}>
+        <p className="section-tag">Efficiency</p>
+        <h2 style={{ fontSize: 17 }}>Appliance Efficiency Radar</h2>
+        <div className="chart-canvas-wrap" style={{ height: 220 }}><canvas ref={radarRef} role="img" aria-label="Appliance efficiency radar" /></div>
+      </div>
+
+      {/* Pills */}
       <div className="premium-card">
-        <p className="section-tag">Quick Summary</p>
-        <h2>System Insight</h2>
-        <p className="info-text">
-          The highest consuming appliance is <strong>{peakAppliance.name}</strong> at{" "}
-          <strong>{peakAppliance.units} kWh</strong> costing{" "}
-          <strong>₹{peakAppliance.amount}</strong>. The peak day is{" "}
-          <strong>{peakDay.day}</strong> with <strong>{peakDay.units} kWh</strong>.
-          Average day-wise usage is <strong>{averageDayUnits.toFixed(2)} kWh</strong>.
-        </p>
-      </div>
-
-      <div className="recommend-grid">
-        {cards.map((item, index) => (
-          <div className="premium-card recommendation-card" key={index}>
-            <div className={getBadgeClass(item.type)}>{item.title}</div>
-            <p className="info-text recommendation-text">{item.text}</p>
-          </div>
-        ))}
+        <p className="section-tag">Current Readings</p>
+        <h2 style={{ fontSize: 17, marginBottom: 12 }}>Appliance Hours</h2>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {Object.keys(ICONS).map((name) => (
+            <div key={name} className="appliance-pill">
+              <span style={{ color: `var(--${PILL_COLORS[name]})` }}>{ICONS[name]}</span>
+              <span>{name}</span>
+              <span className="pill-val">{usageHours[name]}h</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -1,1093 +1,225 @@
-// import { useEffect, useMemo, useState } from "react";
-// import {
-//   ResponsiveContainer,
-//   BarChart,
-//   Bar,
-//   XAxis,
-//   YAxis,
-//   CartesianGrid,
-//   Tooltip,
-//   LineChart,
-//   Line,
-// } from "recharts";
-
-// const appliancePower = {
-//   AC: 1.5,
-//   Fan: 0.08,
-//   Light: 0.05,
-//   Fridge: 0.2,
-//   TV: 0.1,
-// };
-
-// const daysList = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-// const defaultUsageHours = {
-//   AC: 4,
-//   Fan: 8,
-//   Light: 6,
-//   Fridge: 24,
-//   TV: 3,
-// };
-
-// const defaultApplianceHoursByDay = {
-//   Mon: { ...defaultUsageHours },
-//   Tue: { ...defaultUsageHours },
-//   Wed: { ...defaultUsageHours },
-//   Thu: { ...defaultUsageHours },
-//   Fri: { ...defaultUsageHours },
-//   Sat: { ...defaultUsageHours },
-//   Sun: { ...defaultUsageHours },
-// };
-
-// function calculateDayUnits(hoursObj) {
-//   return Object.keys(appliancePower).reduce((sum, appliance) => {
-//     return sum + appliancePower[appliance] * (hoursObj[appliance] || 0);
-//   }, 0);
-// }
-
-// export default function Monitor() {
-//   const [selectedDay, setSelectedDay] = useState("Mon");
-//   const [selectedAppliance, setSelectedAppliance] = useState("AC");
-//   const [enteredHours, setEnteredHours] = useState("");
-
-//   const [applianceHoursByDay, setApplianceHoursByDay] = useState(() => {
-//     return (
-//       JSON.parse(localStorage.getItem("applianceHoursByDay")) ||
-//       defaultApplianceHoursByDay
-//     );
-//   });
-
-//   // selected day's hours
-//   const currentDayHours = applianceHoursByDay[selectedDay];
-
-//   // bar chart data for selected day
-//   const applianceData = useMemo(() => {
-//     return Object.keys(appliancePower).map((name) => ({
-//       name,
-//       hours: currentDayHours[name],
-//       units: +(appliancePower[name] * currentDayHours[name]).toFixed(2),
-//     }));
-//   }, [currentDayHours]);
-
-//   // line chart data for all days (derived from appliance hours)
-//   const dailyData = useMemo(() => {
-//     return daysList.map((day) => ({
-//       day,
-//       units: +calculateDayUnits(applianceHoursByDay[day]).toFixed(2),
-//     }));
-//   }, [applianceHoursByDay]);
-
-//   const applianceTotal = useMemo(() => {
-//     return applianceData
-//       .reduce((sum, item) => sum + item.units, 0)
-//       .toFixed(2);
-//   }, [applianceData]);
-
-//   const peakAppliance = useMemo(() => {
-//     return applianceData.reduce((max, item) =>
-//       item.units > max.units ? item : max
-//     );
-//   }, [applianceData]);
-
-//   const weekTotal = useMemo(() => {
-//     return dailyData.reduce((sum, item) => sum + item.units, 0).toFixed(2);
-//   }, [dailyData]);
-
-//   const peakDay = useMemo(() => {
-//     return dailyData.reduce((max, item) =>
-//       item.units > max.units ? item : max
-//     );
-//   }, [dailyData]);
-
-//   useEffect(() => {
-//     // save full linked structure
-//     localStorage.setItem(
-//       "applianceHoursByDay",
-//       JSON.stringify(applianceHoursByDay)
-//     );
-
-//     // keep existing pages working
-//     localStorage.setItem("dailyEnergyData", JSON.stringify(dailyData));
-//     localStorage.setItem(
-//       "applianceHours",
-//       JSON.stringify(applianceHoursByDay[selectedDay])
-//     );
-//   }, [applianceHoursByDay, dailyData, selectedDay]);
-
-//   function updateAppliance() {
-//     const val = parseFloat(enteredHours);
-
-//     if (isNaN(val) || val < 0) {
-//       alert("Enter valid hours");
-//       return;
-//     }
-
-//     setApplianceHoursByDay((prev) => ({
-//       ...prev,
-//       [selectedDay]: {
-//         ...prev[selectedDay],
-//         [selectedAppliance]: val,
-//       },
-//     }));
-
-//     setEnteredHours("");
-//   }
-
-//   function randomSelectedDay() {
-//     setApplianceHoursByDay((prev) => ({
-//       ...prev,
-//       [selectedDay]: {
-//         AC: Math.floor(Math.random() * 8) + 1,
-//         Fan: Math.floor(Math.random() * 12) + 4,
-//         Light: Math.floor(Math.random() * 10) + 3,
-//         Fridge: 24,
-//         TV: Math.floor(Math.random() * 8) + 1,
-//       },
-//     }));
-//   }
-
-//   function resetSelectedDay() {
-//     setApplianceHoursByDay((prev) => ({
-//       ...prev,
-//       [selectedDay]: { ...defaultUsageHours },
-//     }));
-//   }
-
-//   function randomAllDays() {
-//     const updated = {};
-//     daysList.forEach((day) => {
-//       updated[day] = {
-//         AC: Math.floor(Math.random() * 8) + 1,
-//         Fan: Math.floor(Math.random() * 12) + 4,
-//         Light: Math.floor(Math.random() * 10) + 3,
-//         Fridge: 24,
-//         TV: Math.floor(Math.random() * 8) + 1,
-//       };
-//     });
-//     setApplianceHoursByDay(updated);
-//   }
-
-//   function resetAllDays() {
-//     setApplianceHoursByDay(defaultApplianceHoursByDay);
-//   }
-
-//   function getRecommendation() {
-//     if (currentDayHours.AC >= 7 || peakDay.units >= 13) {
-//       return "High energy usage detected. Reduce AC runtime and shift heavy usage away from peak days.";
-//     }
-
-//     if (currentDayHours.AC >= 5 || peakDay.units >= 10) {
-//       return "Moderate usage pattern. Optimizing appliance timing can improve efficiency.";
-//     }
-
-//     return "Good energy usage pattern. System is efficient.";
-//   }
-
-//   return (
-//     <div className="page">
-//       <div className="page-title-row">
-//         <div>
-//           <p className="section-tag">Monitoring Module</p>
-//           <h1>Energy Monitoring</h1>
-//           <p className="subtext">
-//             Appliance hours are linked directly to day-wise energy calculation
-//           </p>
-//         </div>
-//       </div>
-
-//       <div className="premium-card input-card">
-//         <p className="section-tag">Day Selection</p>
-//         <h2>Choose Day</h2>
-
-//         <div className="input-row">
-//           <select
-//             value={selectedDay}
-//             onChange={(e) => setSelectedDay(e.target.value)}
-//             className="premium-input"
-//           >
-//             {daysList.map((day) => (
-//               <option key={day}>{day}</option>
-//             ))}
-//           </select>
-
-//           <button onClick={randomSelectedDay} className="secondary-btn">
-//             Random Selected Day
-//           </button>
-
-//           <button onClick={resetSelectedDay} className="secondary-btn">
-//             Reset Selected Day
-//           </button>
-
-//           <button onClick={randomAllDays} className="secondary-btn">
-//             Random All Days
-//           </button>
-
-//           <button onClick={resetAllDays} className="secondary-btn">
-//             Reset All Days
-//           </button>
-//         </div>
-//       </div>
-
-//       <div className="premium-card input-card">
-//         <p className="section-tag">Appliance Control</p>
-//         <h2>Update Appliance Hours for {selectedDay}</h2>
-
-//         <div className="input-row">
-//           <select
-//             value={selectedAppliance}
-//             onChange={(e) => setSelectedAppliance(e.target.value)}
-//             className="premium-input"
-//           >
-//             <option>AC</option>
-//             <option>Fan</option>
-//             <option>Light</option>
-//             <option>Fridge</option>
-//             <option>TV</option>
-//           </select>
-
-//           <input
-//             type="number"
-//             min="0"
-//             step="0.1"
-//             placeholder="Enter hours"
-//             value={enteredHours}
-//             onChange={(e) => {
-//               const val = e.target.value;
-//               if (val < 0) return;
-//               setEnteredHours(val);
-//             }}
-//             className="premium-input"
-//           />
-
-//           <button onClick={updateAppliance} className="primary-btn">
-//             Update
-//           </button>
-//         </div>
-//       </div>
-
-//       <section className="stats-grid">
-//         <div className="premium-card stat-box">
-//           <p>{selectedDay} Total</p>
-//           <h3>{applianceTotal} kWh</h3>
-//         </div>
-
-//         <div className="premium-card stat-box">
-//           <p>{selectedDay} Peak Appliance</p>
-//           <h3>{peakAppliance.name}</h3>
-//         </div>
-
-//         <div className="premium-card stat-box">
-//           <p>Weekly Units</p>
-//           <h3>{weekTotal} kWh</h3>
-//         </div>
-
-//         <div className="premium-card stat-box">
-//           <p>Peak Day</p>
-//           <h3>{peakDay.day}</h3>
-//         </div>
-//       </section>
-
-//       <section className="chart-grid">
-//         <div className="premium-card">
-//           <p className="section-tag">Selected Day Appliance Analytics</p>
-//           <h2>{selectedDay} Appliance Consumption</h2>
-//           <ResponsiveContainer width="100%" height={320}>
-//             <BarChart data={applianceData}>
-//               <CartesianGrid strokeDasharray="3 3" />
-//               <XAxis dataKey="name" />
-//               <YAxis />
-//               <Tooltip />
-//               <Bar dataKey="units" />
-//             </BarChart>
-//           </ResponsiveContainer>
-//         </div>
-
-//         <div className="premium-card">
-//           <p className="section-tag">Week Analytics</p>
-//           <h2>Day-wise Consumption</h2>
-//           <ResponsiveContainer width="100%" height={320}>
-//             <LineChart data={dailyData}>
-//               <CartesianGrid strokeDasharray="3 3" />
-//               <XAxis dataKey="day" />
-//               <YAxis />
-//               <Tooltip />
-//               <Line dataKey="units" strokeWidth={3} />
-//             </LineChart>
-//           </ResponsiveContainer>
-//         </div>
-//       </section>
-
-//       <div className="premium-card">
-//         <p className="section-tag">Smart Insight</p>
-//         <h2>Recommendation</h2>
-//         <p className="info-text">{getRecommendation()}</p>
-//       </div>
-
-//       <div className="premium-card">
-//         <p className="section-tag">Calculation Logic</p>
-//         <h2>How Linking Works</h2>
-//         <p className="info-text">
-//           Energy for each day is derived from appliance usage hours using:
-//           Energy (kWh) = Power (kW) × Time (hours). The day-wise graph is
-//           automatically calculated from appliance data, so both charts and day
-//           totals stay linked.
-//         </p>
-//       </div>
-//     </div>
-//   );
-// }
-
-// import { useEffect, useMemo, useState } from "react";
-// import {
-//   ResponsiveContainer,
-//   BarChart,
-//   Bar,
-//   XAxis,
-//   YAxis,
-//   CartesianGrid,
-//   Tooltip,
-//   LineChart,
-//   Line,
-// } from "recharts";
-
-// const appliancePower = {
-//   AC: 1.5,
-//   Fan: 0.08,
-//   Light: 0.05,
-//   Fridge: 0.2,
-//   TV: 0.1,
-// };
-
-// const daysList = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-// const defaultUsageHours = {
-//   AC: 4,
-//   Fan: 8,
-//   Light: 6,
-//   Fridge: 24,
-//   TV: 3,
-// };
-
-// const defaultApplianceHoursByDay = {
-//   Mon: { ...defaultUsageHours },
-//   Tue: { ...defaultUsageHours },
-//   Wed: { ...defaultUsageHours },
-//   Thu: { ...defaultUsageHours },
-//   Fri: { ...defaultUsageHours },
-//   Sat: { ...defaultUsageHours },
-//   Sun: { ...defaultUsageHours },
-// };
-
-// const tariffRate = 8; // ₹ per kWh
-
-// function calculateDayUnits(hoursObj) {
-//   return Object.keys(appliancePower).reduce((sum, appliance) => {
-//     return sum + appliancePower[appliance] * (hoursObj[appliance] || 0);
-//   }, 0);
-// }
-
-// export default function Monitor() {
-//   const [selectedDay, setSelectedDay] = useState("Mon");
-//   const [selectedAppliance, setSelectedAppliance] = useState("AC");
-//   const [enteredHours, setEnteredHours] = useState("");
-
-//   const [applianceHoursByDay, setApplianceHoursByDay] = useState(() => {
-//     return (
-//       JSON.parse(localStorage.getItem("applianceHoursByDay")) ||
-//       defaultApplianceHoursByDay
-//     );
-//   });
-
-//   const currentDayHours = applianceHoursByDay[selectedDay];
-
-//   const applianceData = useMemo(() => {
-//     return Object.keys(appliancePower).map((name) => {
-//       const units = +(appliancePower[name] * currentDayHours[name]).toFixed(2);
-//       return {
-//         name,
-//         hours: currentDayHours[name],
-//         units,
-//         amount: +(units * tariffRate).toFixed(2),
-//       };
-//     });
-//   }, [currentDayHours]);
-
-//   const dailyData = useMemo(() => {
-//     return daysList.map((day) => {
-//       const units = +calculateDayUnits(applianceHoursByDay[day]).toFixed(2);
-//       return {
-//         day,
-//         units,
-//         amount: +(units * tariffRate).toFixed(2),
-//       };
-//     });
-//   }, [applianceHoursByDay]);
-
-//   const applianceTotal = useMemo(() => {
-//     return applianceData.reduce((sum, item) => sum + item.units, 0).toFixed(2);
-//   }, [applianceData]);
-
-//   const selectedDayAmount = useMemo(() => {
-//     return applianceData.reduce((sum, item) => sum + item.amount, 0).toFixed(2);
-//   }, [applianceData]);
-
-//   const peakAppliance = useMemo(() => {
-//     return applianceData.reduce((max, item) =>
-//       item.units > max.units ? item : max
-//     );
-//   }, [applianceData]);
-
-//   const weekTotal = useMemo(() => {
-//     return dailyData.reduce((sum, item) => sum + item.units, 0).toFixed(2);
-//   }, [dailyData]);
-
-//   const weekAmount = useMemo(() => {
-//     return dailyData.reduce((sum, item) => sum + item.amount, 0).toFixed(2);
-//   }, [dailyData]);
-
-//   const peakDay = useMemo(() => {
-//     return dailyData.reduce((max, item) =>
-//       item.units > max.units ? item : max
-//     );
-//   }, [dailyData]);
-
-//   useEffect(() => {
-//     localStorage.setItem(
-//       "applianceHoursByDay",
-//       JSON.stringify(applianceHoursByDay)
-//     );
-//     localStorage.setItem("dailyEnergyData", JSON.stringify(dailyData));
-//     localStorage.setItem(
-//       "applianceHours",
-//       JSON.stringify(applianceHoursByDay[selectedDay])
-//     );
-//     localStorage.setItem("weeklyAmount", JSON.stringify(weekAmount));
-//   }, [applianceHoursByDay, dailyData, selectedDay, weekAmount]);
-
-//   function updateAppliance() {
-//     const val = parseFloat(enteredHours);
-
-//     if (isNaN(val) || val < 0) {
-//       alert("Enter valid hours");
-//       return;
-//     }
-
-//     setApplianceHoursByDay((prev) => ({
-//       ...prev,
-//       [selectedDay]: {
-//         ...prev[selectedDay],
-//         [selectedAppliance]: val,
-//       },
-//     }));
-
-//     setEnteredHours("");
-//   }
-
-//   function randomSelectedDay() {
-//     setApplianceHoursByDay((prev) => ({
-//       ...prev,
-//       [selectedDay]: {
-//         AC: Math.floor(Math.random() * 8) + 1,
-//         Fan: Math.floor(Math.random() * 12) + 4,
-//         Light: Math.floor(Math.random() * 10) + 3,
-//         Fridge: 24,
-//         TV: Math.floor(Math.random() * 8) + 1,
-//       },
-//     }));
-//   }
-
-//   function resetSelectedDay() {
-//     setApplianceHoursByDay((prev) => ({
-//       ...prev,
-//       [selectedDay]: { ...defaultUsageHours },
-//     }));
-//   }
-
-//   function randomAllDays() {
-//     const updated = {};
-//     daysList.forEach((day) => {
-//       updated[day] = {
-//         AC: Math.floor(Math.random() * 8) + 1,
-//         Fan: Math.floor(Math.random() * 12) + 4,
-//         Light: Math.floor(Math.random() * 10) + 3,
-//         Fridge: 24,
-//         TV: Math.floor(Math.random() * 8) + 1,
-//       };
-//     });
-//     setApplianceHoursByDay(updated);
-//   }
-
-//   function resetAllDays() {
-//     setApplianceHoursByDay(defaultApplianceHoursByDay);
-//   }
-
-//   function getRecommendation() {
-//     if (currentDayHours.AC >= 7 || peakDay.units >= 13) {
-//       return "High energy usage detected. Reduce AC runtime and shift heavy usage away from peak days.";
-//     }
-
-//     if (currentDayHours.AC >= 5 || peakDay.units >= 10) {
-//       return "Moderate usage pattern. Optimizing appliance timing can improve efficiency.";
-//     }
-
-//     return "Good energy usage pattern. System is efficient.";
-//   }
-
-//   return (
-//     <div className="page">
-//       <div className="page-title-row">
-//         <div>
-//           <p className="section-tag">Monitoring Module</p>
-//           <h1>Energy Monitoring</h1>
-//           <p className="subtext">
-//             Appliance hours are linked directly to day-wise energy calculation
-//           </p>
-//         </div>
-//       </div>
-
-//       <div className="premium-card input-card">
-//         <p className="section-tag">Day Selection</p>
-//         <h2>Choose Day</h2>
-
-//         <div className="input-row">
-//           <select
-//             value={selectedDay}
-//             onChange={(e) => setSelectedDay(e.target.value)}
-//             className="premium-input"
-//           >
-//             {daysList.map((day) => (
-//               <option key={day}>{day}</option>
-//             ))}
-//           </select>
-
-//           <button onClick={randomSelectedDay} className="secondary-btn">
-//             Random Selected Day
-//           </button>
-
-//           <button onClick={resetSelectedDay} className="secondary-btn">
-//             Reset Selected Day
-//           </button>
-
-//           <button onClick={randomAllDays} className="secondary-btn">
-//             Random All Days
-//           </button>
-
-//           <button onClick={resetAllDays} className="secondary-btn">
-//             Reset All Days
-//           </button>
-//         </div>
-//       </div>
-
-//       <div className="premium-card input-card">
-//         <p className="section-tag">Appliance Control</p>
-//         <h2>Update Appliance Hours for {selectedDay}</h2>
-
-//         <div className="input-row">
-//           <select
-//             value={selectedAppliance}
-//             onChange={(e) => setSelectedAppliance(e.target.value)}
-//             className="premium-input"
-//           >
-//             <option>AC</option>
-//             <option>Fan</option>
-//             <option>Light</option>
-//             <option>Fridge</option>
-//             <option>TV</option>
-//           </select>
-
-//           <input
-//             type="number"
-//             min="0"
-//             step="0.1"
-//             placeholder="Enter hours"
-//             value={enteredHours}
-//             onChange={(e) => {
-//               const val = e.target.value;
-//               if (val < 0) return;
-//               setEnteredHours(val);
-//             }}
-//             className="premium-input"
-//           />
-
-//           <button onClick={updateAppliance} className="primary-btn">
-//             Update
-//           </button>
-//         </div>
-//       </div>
-
-//       <section className="stats-grid">
-//         <div className="premium-card stat-box">
-//           <p>{selectedDay} Total</p>
-//           <h3>{applianceTotal} kWh</h3>
-//         </div>
-
-//         <div className="premium-card stat-box">
-//           <p>{selectedDay} Amount</p>
-//           <h3>₹{selectedDayAmount}</h3>
-//         </div>
-
-//         <div className="premium-card stat-box">
-//           <p>Weekly Units</p>
-//           <h3>{weekTotal} kWh</h3>
-//         </div>
-
-//         <div className="premium-card stat-box">
-//           <p>Weekly Amount</p>
-//           <h3>₹{weekAmount}</h3>
-//         </div>
-//       </section>
-
-//       <section className="chart-grid">
-//         <div className="premium-card">
-//           <p className="section-tag">Selected Day Appliance Analytics</p>
-//           <h2>{selectedDay} Appliance Consumption</h2>
-//           <ResponsiveContainer width="100%" height={320}>
-//             <BarChart data={applianceData}>
-//               <CartesianGrid strokeDasharray="3 3" />
-//               <XAxis dataKey="name" />
-//               <YAxis />
-//               <Tooltip
-//                 formatter={(value, name) =>
-//                   name === "amount" ? [`₹${value}`, "Amount"] : [value, "Units"]
-//                 }
-//               />
-//               <Bar dataKey="units" />
-//             </BarChart>
-//           </ResponsiveContainer>
-//         </div>
-
-//         <div className="premium-card">
-//           <p className="section-tag">Week Analytics</p>
-//           <h2>Day-wise Consumption</h2>
-//           <ResponsiveContainer width="100%" height={320}>
-//             <LineChart data={dailyData}>
-//               <CartesianGrid strokeDasharray="3 3" />
-//               <XAxis dataKey="day" />
-//               <YAxis />
-//               <Tooltip
-//                 formatter={(value, name) =>
-//                   name === "amount" ? [`₹${value}`, "Amount"] : [value, "Units"]
-//                 }
-//               />
-//               <Line dataKey="units" strokeWidth={3} />
-//             </LineChart>
-//           </ResponsiveContainer>
-//         </div>
-//       </section>
-
-//       <div className="premium-card">
-//         <p className="section-tag">Smart Insight</p>
-//         <h2>Recommendation</h2>
-//         <p className="info-text">{getRecommendation()}</p>
-//         <p className="info-text">
-//           Peak appliance: <strong>{peakAppliance.name}</strong> | Peak day:{" "}
-//           <strong>{peakDay.day}</strong>
-//         </p>
-//       </div>
-
-//       <div className="premium-card">
-//         <p className="section-tag">Calculation Logic</p>
-//         <h2>How Cost Is Calculated</h2>
-//         <p className="info-text">Energy (kWh) = Power (kW) × Time (hours)</p>
-//         <p className="info-text">Amount (₹) = Energy (kWh) × ₹{tariffRate}</p>
-//       </div>
-//     </div>
-//   );
-// }
-
-import { useEffect, useMemo, useState } from "react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  LineChart,
-  Line,
-} from "recharts";
-
-const appliancePower = {
-  AC: 1.5,
-  Fan: 0.08,
-  Light: 0.05,
-  Fridge: 0.2,
-  TV: 0.1,
+import { useEffect, useMemo, useRef, useState } from "react";
+import Chart from "chart.js/auto";
+
+const appliancePower   = { AC: 1.5, Fan: 0.08, Light: 0.05, Fridge: 0.2, TV: 0.1 };
+const daysList         = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const defaultUsageHours = { AC: 4, Fan: 8, Light: 6, Fridge: 24, TV: 3 };
+
+const APPLIANCE_META = {
+  AC:     { color: "#1d5fa6", icon: <svg viewBox="0 0 24 24"><path d="M4 8a8 8 0 0116 0v8H4V8z"/><path d="M9 16v2a3 3 0 006 0v-2"/></svg> },
+  Fan:    { color: "#0a7a72", icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 9c-0-3 2.5-5.5 5.5-5.5A5.5 5.5 0 0123 9c0 1.5-1.3 3-3 3H12"/><path d="M12 15c0 3-2.5 5.5-5.5 5.5A5.5 5.5 0 011 15c0-1.5 1.3-3 3-3h8"/><path d="M9 12c-2.5 1.5-3.5 4.5-2 7"/><path d="M15 12c2.5-1.5 3.5-4.5 2-7"/></svg> },
+  Light:  { color: "#c47c0a", icon: <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="2"/><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 010 14"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/></svg> },
+  Fridge: { color: "#6d44b8", icon: <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><line x1="10" y1="6" x2="10" y2="8"/><line x1="10" y1="14" x2="10" y2="18"/></svg> },
+  TV:     { color: "#c0354a", icon: <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg> },
 };
 
-const daysList = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const defaultByDay = Object.fromEntries(daysList.map((d) => [d, { ...defaultUsageHours }]));
 
-const defaultUsageHours = {
-  AC: 4,
-  Fan: 8,
-  Light: 6,
-  Fridge: 24,
-  TV: 3,
-};
-
-const zeroUsageHours = {
-  AC: 0,
-  Fan: 0,
-  Light: 0,
-  Fridge: 0,
-  TV: 0,
-};
-
-const defaultApplianceHoursByDay = {
-  Mon: { ...defaultUsageHours },
-  Tue: { ...defaultUsageHours },
-  Wed: { ...defaultUsageHours },
-  Thu: { ...defaultUsageHours },
-  Fri: { ...defaultUsageHours },
-  Sat: { ...defaultUsageHours },
-  Sun: { ...defaultUsageHours },
-};
-
-const tariffRate = 8; // ₹ per kWh
-
-function calculateDayUnits(hoursObj) {
-  return Object.keys(appliancePower).reduce((sum, appliance) => {
-    return sum + appliancePower[appliance] * (hoursObj[appliance] || 0);
-  }, 0);
-}
-
-function generateRandomHours() {
-  return {
-    AC: Math.floor(Math.random() * 8) + 1,
-    Fan: Math.floor(Math.random() * 12) + 4,
-    Light: Math.floor(Math.random() * 10) + 3,
-    Fridge: 24,
-    TV: Math.floor(Math.random() * 8) + 1,
-  };
+function calcUnits(h) {
+  return Object.keys(appliancePower).reduce((s, k) => s + appliancePower[k] * (h[k] || 0), 0);
 }
 
 export default function Monitor() {
-  const [mode, setMode] = useState("random");
-  const [selectedDay, setSelectedDay] = useState("Mon");
-  const [selectedAppliance, setSelectedAppliance] = useState("AC");
-  const [enteredHours, setEnteredHours] = useState("");
+  const [selectedDay, setSelectedDay]     = useState("Mon");
+  const [selectedAppliance, setSelected]  = useState("AC");
+  const [enteredHours, setEnteredHours]   = useState("");
+  const [applianceHoursByDay, setByDay]   = useState(
+    () => JSON.parse(localStorage.getItem("applianceHoursByDay")) || defaultByDay
+  );
 
-  const [applianceHoursByDay, setApplianceHoursByDay] = useState(() => {
-    return (
-      JSON.parse(localStorage.getItem("applianceHoursByDay")) ||
-      defaultApplianceHoursByDay
-    );
-  });
+  const barRef  = useRef(null);
+  const lineRef = useRef(null);
+  const barInst  = useRef(null);
+  const lineInst = useRef(null);
 
   const currentDayHours = applianceHoursByDay[selectedDay];
 
-  const applianceData = useMemo(() => {
-    return Object.keys(appliancePower).map((name) => {
-      const units = +(appliancePower[name] * currentDayHours[name]).toFixed(2);
-      return {
-        name,
-        hours: currentDayHours[name],
-        units,
-        amount: +(units * tariffRate).toFixed(2),
-      };
-    });
-  }, [currentDayHours]);
+  const applianceData = useMemo(() =>
+    Object.keys(appliancePower).map((n) => ({
+      name: n,
+      hours: currentDayHours[n],
+      units: +(appliancePower[n] * currentDayHours[n]).toFixed(2),
+    })), [currentDayHours]);
 
-  const dailyData = useMemo(() => {
-    return daysList.map((day) => {
-      const units = +calculateDayUnits(applianceHoursByDay[day]).toFixed(2);
-      return {
-        day,
-        units,
-        amount: +(units * tariffRate).toFixed(2),
-      };
-    });
-  }, [applianceHoursByDay]);
+  const dailyData = useMemo(() =>
+    daysList.map((d) => ({ day: d, units: +calcUnits(applianceHoursByDay[d]).toFixed(2) })),
+    [applianceHoursByDay]);
 
-  const applianceTotal = useMemo(() => {
-    return applianceData.reduce((sum, item) => sum + item.units, 0).toFixed(2);
-  }, [applianceData]);
-
-  const selectedDayAmount = useMemo(() => {
-    return applianceData.reduce((sum, item) => sum + item.amount, 0).toFixed(2);
-  }, [applianceData]);
-
-  const peakAppliance = useMemo(() => {
-    return applianceData.reduce((max, item) =>
-      item.units > max.units ? item : max
-    );
-  }, [applianceData]);
-
-  const weekTotal = useMemo(() => {
-    return dailyData.reduce((sum, item) => sum + item.units, 0).toFixed(2);
-  }, [dailyData]);
-
-  const weekAmount = useMemo(() => {
-    return dailyData.reduce((sum, item) => sum + item.amount, 0).toFixed(2);
-  }, [dailyData]);
-
-  const peakDay = useMemo(() => {
-    return dailyData.reduce((max, item) =>
-      item.units > max.units ? item : max
-    );
-  }, [dailyData]);
+  const applianceTotal = useMemo(() => applianceData.reduce((s, i) => s + i.units, 0).toFixed(2), [applianceData]);
+  const peakAppliance  = useMemo(() => applianceData.reduce((m, i) => i.units > m.units ? i : m), [applianceData]);
+  const weekTotal = useMemo(() => dailyData.reduce((s, i) => s + i.units, 0).toFixed(2), [dailyData]);
+  const peakDay   = useMemo(() => dailyData.reduce((m, i) => i.units > m.units ? i : m), [dailyData]);
 
   useEffect(() => {
-    localStorage.setItem(
-      "applianceHoursByDay",
-      JSON.stringify(applianceHoursByDay)
-    );
+    localStorage.setItem("applianceHoursByDay", JSON.stringify(applianceHoursByDay));
     localStorage.setItem("dailyEnergyData", JSON.stringify(dailyData));
-    localStorage.setItem(
-      "applianceHours",
-      JSON.stringify(applianceHoursByDay[selectedDay])
-    );
-    localStorage.setItem("weeklyAmount", JSON.stringify(weekAmount));
-  }, [applianceHoursByDay, dailyData, selectedDay, weekAmount]);
+    localStorage.setItem("applianceHours", JSON.stringify(applianceHoursByDay[selectedDay]));
+  }, [applianceHoursByDay, dailyData, selectedDay]);
 
-  function handleModeChange(newMode) {
-  setMode(newMode);
-
-  if (newMode === "manual") {
-    const zeroWeek = {};
-
-    daysList.forEach((day) => {
-      zeroWeek[day] = { ...zeroUsageHours };
+  useEffect(() => {
+    if (barInst.current) barInst.current.destroy();
+    if (!barRef.current) return;
+    barInst.current = new Chart(barRef.current, {
+      type: "bar",
+      data: {
+        labels: applianceData.map((a) => a.name),
+        datasets: [{
+          data: applianceData.map((a) => a.units),
+          backgroundColor: Object.values(APPLIANCE_META).map((m) => m.color),
+          borderRadius: 7, borderSkipped: false,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { grid: { color: "rgba(26,122,69,0.07)" }, ticks: { callback: (v) => v + " kWh" } },
+        },
+      },
     });
+    return () => barInst.current?.destroy();
+  }, [applianceData]);
 
-    setApplianceHoursByDay(zeroWeek);
-
-    setEnteredHours("");
-    setSelectedAppliance("AC");
-  }
-}
+  useEffect(() => {
+    if (lineInst.current) lineInst.current.destroy();
+    if (!lineRef.current) return;
+    lineInst.current = new Chart(lineRef.current, {
+      type: "line",
+      data: {
+        labels: dailyData.map((d) => d.day),
+        datasets: [{
+          data: dailyData.map((d) => d.units),
+          borderColor: "#2ca05a", backgroundColor: "rgba(44,160,90,0.08)",
+          fill: true, tension: 0.4,
+          pointBackgroundColor: "#2ca05a", pointRadius: 5, pointHoverRadius: 7,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { grid: { color: "rgba(26,122,69,0.07)" } },
+        },
+      },
+    });
+    return () => lineInst.current?.destroy();
+  }, [dailyData]);
 
   function updateAppliance() {
     const val = parseFloat(enteredHours);
-
-    if (isNaN(val) || val < 0) {
-      alert("Enter valid hours");
-      return;
-    }
-
-    setApplianceHoursByDay((prev) => ({
-      ...prev,
-      [selectedDay]: {
-        ...prev[selectedDay],
-        [selectedAppliance]: val,
-      },
-    }));
-
+    if (isNaN(val) || val < 0) { alert("Enter valid hours"); return; }
+    setByDay((prev) => ({ ...prev, [selectedDay]: { ...prev[selectedDay], [selectedAppliance]: val } }));
     setEnteredHours("");
   }
 
-  function fetchSelectedDayData() {
-    setApplianceHoursByDay((prev) => ({
+  function randomDay() {
+    setByDay((prev) => ({
       ...prev,
-      [selectedDay]: generateRandomHours(),
+      [selectedDay]: { AC: Math.floor(Math.random()*8)+1, Fan: Math.floor(Math.random()*12)+4, Light: Math.floor(Math.random()*10)+3, Fridge: 24, TV: Math.floor(Math.random()*8)+1 },
     }));
   }
 
-  function fetchWholeWeekData() {
-    const updated = {};
-    daysList.forEach((day) => {
-      updated[day] = generateRandomHours();
+  function resetDay() {
+    setByDay((prev) => ({ ...prev, [selectedDay]: { ...defaultUsageHours } }));
+  }
+
+  function randomAll() {
+    const u = {};
+    daysList.forEach((d) => {
+      u[d] = { AC: Math.floor(Math.random()*8)+1, Fan: Math.floor(Math.random()*12)+4, Light: Math.floor(Math.random()*10)+3, Fridge: 24, TV: Math.floor(Math.random()*8)+1 };
     });
-    setApplianceHoursByDay(updated);
+    setByDay(u);
   }
 
-  function resetAllDays() {
-    setApplianceHoursByDay(defaultApplianceHoursByDay);
-  }
-
-  function getRecommendation() {
-    if (currentDayHours.AC >= 7 || peakDay.units >= 13) {
-      return "High energy usage detected. Reduce AC runtime and shift heavy usage away from peak days.";
-    }
-
-    if (currentDayHours.AC >= 5 || peakDay.units >= 10) {
-      return "Moderate usage pattern. Optimizing appliance timing can improve efficiency.";
-    }
-
-    return "Good energy usage pattern. System is efficient.";
-  }
+  const stats = [
+    { icon: <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>, cls: "blue",  label: `${selectedDay} Total`,  value: `${applianceTotal} kWh` },
+    { icon: APPLIANCE_META[peakAppliance.name].icon,                                                   cls: "amber", label: "Peak Appliance",         value: peakAppliance.name },
+    { icon: <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>, cls: "green", label: "Weekly Units", value: `${weekTotal} kWh` },
+    { icon: <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>, cls: "rose", label: "Peak Day", value: peakDay.day },
+  ];
 
   return (
     <div className="page">
+      <img className="page-img-strip" src="https://images.unsplash.com/photo-1558449028-b53a39d100fc?w=1200&q=75&fit=crop" alt="Smart home" />
+
       <div className="page-title-row">
-        <div>
-          <p className="section-tag">Monitoring Module</p>
-          <h1>Energy Monitoring</h1>
-          <p className="subtext">
-            Switch between fetched meter mode and manual entry mode
-          </p>
-        </div>
+        <p className="section-tag">Monitoring Module</p>
+        <h1>Energy Monitor</h1>
+        <p className="subtext">Track appliance-by-appliance daily usage</p>
       </div>
 
+      {/* Appliance picker */}
       <div className="premium-card input-card">
-        <p className="section-tag">Monitoring Mode</p>
-        <h2>Select Data Mode</h2>
-
-        <div className="input-row">
-          <select
-            value={mode}
-            onChange={(e) => handleModeChange(e.target.value)}
-            className="premium-input"
-          >
-            <option value="random">Random Fetch Mode</option>
-            <option value="manual">Manual Entry Mode</option>
-          </select>
-
-          <select
-            value={selectedDay}
-            onChange={(e) => setSelectedDay(e.target.value)}
-            className="premium-input"
-          >
-            {daysList.map((day) => (
-              <option key={day}>{day}</option>
-            ))}
-          </select>
-
-          {mode === "random" && (
-            <>
-              <button onClick={fetchSelectedDayData} className="primary-btn">
-                Fetch Selected Day
-              </button>
-
-              <button onClick={fetchWholeWeekData} className="secondary-btn">
-                Fetch Whole Week
-              </button>
-
-              <button onClick={resetAllDays} className="secondary-btn">
-                Reset
-              </button>
-            </>
-          )}
+        <p className="section-tag">Appliance Overview — {selectedDay}</p>
+        <div className="appliance-grid-row">
+          {Object.keys(appliancePower).map((name) => (
+            <div
+              key={name}
+              className={`appliance-card${selectedAppliance === name ? " selected" : ""}`}
+              onClick={() => setSelected(name)}
+              style={selectedAppliance === name ? { background: APPLIANCE_META[name].color, borderColor: APPLIANCE_META[name].color } : {}}
+            >
+              {APPLIANCE_META[name].icon}
+              <div>{name}</div>
+              <div className="app-hours">{currentDayHours[name]}h</div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {mode === "random" && (
-        <div className="premium-card">
-          <p className="section-tag">Live Feed Simulation</p>
-          <h2>Automatic Meter & Appliance Data</h2>
-          <p className="info-text">
-            In this mode, the system simulates direct data fetching from smart
-            meters and connected appliances.
-          </p>
+      {/* Controls */}
+      <div className="premium-card input-card">
+        <p className="section-tag">Controls</p>
+        <div className="input-row">
+          <select value={selectedDay} onChange={(e) => setSelectedDay(e.target.value)} className="premium-input">
+            {daysList.map((d) => <option key={d}>{d}</option>)}
+          </select>
+          <input type="number" min="0" step="0.1" placeholder="Enter hours" value={enteredHours} onChange={(e) => setEnteredHours(e.target.value)} className="premium-input" />
+          <button onClick={updateAppliance} className="action-btn">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Update
+          </button>
+          <button onClick={randomDay} className="ghost-btn">
+            <svg viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+            Random Day
+          </button>
+          <button onClick={randomAll} className="ghost-btn">
+            <svg viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/></svg>
+            Random All
+          </button>
+          <button onClick={resetDay} className="ghost-btn">
+            <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+            Reset
+          </button>
         </div>
-      )}
+      </div>
 
-      {mode === "manual" && (
-        <div className="premium-card input-card">
-          <p className="section-tag">Manual Appliance Control</p>
-          <h2>Update Appliance Hours for {selectedDay}</h2>
-
-          <div className="input-row">
-            <select
-              value={selectedAppliance}
-              onChange={(e) => setSelectedAppliance(e.target.value)}
-              className="premium-input"
-            >
-              <option>AC</option>
-              <option>Fan</option>
-              <option>Light</option>
-              <option>Fridge</option>
-              <option>TV</option>
-            </select>
-
-            <input
-              type="number"
-              min="0"
-              step="0.1"
-              placeholder="Enter hours"
-              value={enteredHours}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val < 0) return;
-                setEnteredHours(val);
-              }}
-              className="premium-input"
-            />
-
-            <button onClick={updateAppliance} className="primary-btn">
-              Update
-            </button>
-          </div>
-        </div>
-      )}
-
+      {/* Stats */}
       <section className="stats-grid">
-        <div className="premium-card stat-box">
-          <p>{selectedDay} Total</p>
-          <h3>{applianceTotal} kWh</h3>
-        </div>
-
-        <div className="premium-card stat-box">
-          <p>{selectedDay} Amount</p>
-          <h3>₹{selectedDayAmount}</h3>
-        </div>
-
-        <div className="premium-card stat-box">
-          <p>Weekly Units</p>
-          <h3>{weekTotal} kWh</h3>
-        </div>
-
-        <div className="premium-card stat-box">
-          <p>Weekly Amount</p>
-          <h3>₹{weekAmount}</h3>
-        </div>
+        {stats.map((s, i) => (
+          <div key={i} className="premium-card stat-box">
+            <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
+            <p>{s.label}</p>
+            <h3>{s.value}</h3>
+          </div>
+        ))}
       </section>
 
+      {/* Charts */}
       <section className="chart-grid">
         <div className="premium-card">
-          <p className="section-tag">Selected Day Appliance Analytics</p>
-          <h2>{selectedDay} Appliance Consumption</h2>
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={applianceData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip
-                formatter={(value, name) =>
-                  name === "amount" ? [`₹${value}`, "Amount"] : [value, "Units"]
-                }
-              />
-              <Bar dataKey="units" />
-            </BarChart>
-          </ResponsiveContainer>
+          <p className="section-tag">Appliance Breakdown</p>
+          <h2 style={{ fontSize: 17 }}>{selectedDay} — kWh per Appliance</h2>
+          <div className="chart-canvas-wrap"><canvas ref={barRef} role="img" aria-label="Appliance energy bar chart" /></div>
         </div>
-
         <div className="premium-card">
-          <p className="section-tag">Week Analytics</p>
-          <h2>Day-wise Consumption</h2>
-          <ResponsiveContainer width="100%" height={320}>
-            <LineChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="day" />
-              <YAxis />
-              <Tooltip
-                formatter={(value, name) =>
-                  name === "amount" ? [`₹${value}`, "Amount"] : [value, "Units"]
-                }
-              />
-              <Line dataKey="units" strokeWidth={3} />
-            </LineChart>
-          </ResponsiveContainer>
+          <p className="section-tag">Weekly Trend</p>
+          <h2 style={{ fontSize: 17 }}>Day-wise Consumption</h2>
+          <div className="chart-canvas-wrap"><canvas ref={lineRef} role="img" aria-label="Weekly energy line chart" /></div>
         </div>
       </section>
-
-      <div className="premium-card">
-        <p className="section-tag">Smart Insight</p>
-        <h2>Recommendation</h2>
-        <p className="info-text">{getRecommendation()}</p>
-        <p className="info-text">
-          Peak appliance: <strong>{peakAppliance.name}</strong> | Peak day:{" "}
-          <strong>{peakDay.day}</strong>
-        </p>
-      </div>
-
-      <div className="premium-card">
-        <p className="section-tag">Calculation Logic</p>
-        <h2>How This Page Works</h2>
-        <p className="info-text">Energy (kWh) = Power (kW) × Time (hours)</p>
-        <p className="info-text">Amount (₹) = Energy (kWh) × ₹{tariffRate}</p>
-      </div>
     </div>
   );
 }
