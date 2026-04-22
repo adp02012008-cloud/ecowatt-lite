@@ -1,29 +1,18 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import Chart from "chart.js/auto";
 
 const defaultDailyData = [
-  { day: "Mon", units: 8 }, { day: "Tue", units: 10 }, { day: "Wed", units: 7 },
-  { day: "Thu", units: 12 }, { day: "Fri", units: 9 }, { day: "Sat", units: 11 }, { day: "Sun", units: 13 },
+  { day: "Mon", units: 8 },  { day: "Tue", units: 10 }, { day: "Wed", units: 7 },
+  { day: "Thu", units: 12 }, { day: "Fri", units: 9 },  { day: "Sat", units: 11 },
+  { day: "Sun", units: 13 },
 ];
 
 const FLOW = [
-  {
-    label: "Energy Data",
-    icon: <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
-  },
-  {
-    label: "AI Logic",
-    icon: <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
-  },
-  {
-    label: "Carbon Calc",
-    icon: <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-  },
-  {
-    label: "Smart Tips",
-    icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
-  },
+  { label: "Energy Data", icon: <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> },
+  { label: "AI Logic",    icon: <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> },
+  { label: "Carbon Calc", icon: <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
+  { label: "Smart Tips",  icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> },
 ];
 
 const IMG_STRIPS = [
@@ -46,13 +35,13 @@ const IMG_STRIPS = [
 
 export default function Home() {
   const emissionFactor = 0.695;
-  const barRef = useRef(null);
-  const donutRef = useRef(null);
-  const barChart = useRef(null);
-  const donutChart = useRef(null);
+  const barRef    = useRef(null);
+  const donutRef  = useRef(null);
+  const barInst   = useRef(null);
+  const donutInst = useRef(null);
 
-  const [dailyData, setDailyData] = useState(() =>
-    JSON.parse(localStorage.getItem("dailyEnergyData")) || defaultDailyData
+  const [dailyData, setDailyData] = useState(
+    () => JSON.parse(localStorage.getItem("dailyEnergyData")) || defaultDailyData
   );
 
   useEffect(() => {
@@ -61,126 +50,93 @@ export default function Home() {
   }, []);
 
   const totalUnits = dailyData.reduce((s, i) => s + i.units, 0);
-  const carbonKg = totalUnits * emissionFactor;
+  const carbonKg   = totalUnits * emissionFactor;
   const predictedUnits = (
     (dailyData[dailyData.length - 1].units +
-      dailyData[dailyData.length - 2].units +
-      dailyData[dailyData.length - 3].units) / 3
+     dailyData[dailyData.length - 2].units +
+     dailyData[dailyData.length - 3].units) / 3
   ).toFixed(1);
 
-  function getEcoScore(c) {
-    return Math.max(20, Math.min(100, Math.round(100 - (c / 80) * 80)));
-  }
-
-  const ecoScore = getEcoScore(carbonKg);
+  const getEcoScore = (c) => Math.max(20, Math.min(100, Math.round(100 - (c / 80) * 80)));
+  const ecoScore    = getEcoScore(carbonKg);
   const carbonStatus = carbonKg >= 50 ? "High" : carbonKg >= 35 ? "Moderate" : "Low";
-  const statusColor = carbonKg >= 50 ? "var(--rose)" : carbonKg >= 35 ? "var(--amber)" : "var(--green)";
 
   const stats = [
-    {
-      icon: <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
-      cls: "blue", label: "Weekly Units", value: `${totalUnits.toFixed(1)} kWh`,
-    },
-    {
-      icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>,
-      cls: "green", label: "Eco Score", value: `${ecoScore}/100`,
-    },
-    {
-      icon: <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-      cls: "amber", label: "Carbon Status", value: carbonStatus,
-    },
-    {
-      icon: <svg viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.17 3.82 19.34A1 1 0 004.7 21C8 19 9 18 12 18c0 0 5-3 5-10z"/></svg>,
-      cls: "rose", label: "CO₂ Emitted", value: `${carbonKg.toFixed(1)} kg`,
-    },
+    { icon: <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>, cls: "blue",  label: "Weekly Units",   value: `${totalUnits.toFixed(1)} kWh` },
+    { icon: <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>, cls: "green", label: "Eco Score", value: `${ecoScore}/100` },
+    { icon: <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, cls: "amber", label: "Carbon Status", value: carbonStatus },
+    { icon: <svg viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.17 3.82 19.34A1 1 0 004.7 21C8 19 9 18 12 18c0 0 5-3 5-10z"/><line x1="12" y1="18" x2="12" y2="22"/></svg>, cls: "rose", label: "CO₂ Emitted", value: `${carbonKg.toFixed(1)} kg` },
   ];
 
+  // Bar chart
   useEffect(() => {
-    if (barChart.current) barChart.current.destroy();
-    if (donutChart.current) donutChart.current.destroy();
-
-    if (barRef.current) {
-      barChart.current = new Chart(barRef.current, {
-        type: "bar",
-        data: {
-          labels: dailyData.map((d) => d.day),
-          datasets: [{
-            label: "kWh",
-            data: dailyData.map((d) => d.units),
-            backgroundColor: dailyData.map((d) =>
-              d.units === Math.max(...dailyData.map((x) => x.units)) ? "#c0354a" : "#2ca05a"
-            ),
-            borderRadius: 7,
-            borderSkipped: false,
-          }],
+    if (barInst.current) barInst.current.destroy();
+    if (!barRef.current) return;
+    const maxVal = Math.max(...dailyData.map((d) => d.units));
+    barInst.current = new Chart(barRef.current, {
+      type: "bar",
+      data: {
+        labels: dailyData.map((d) => d.day),
+        datasets: [{
+          data: dailyData.map((d) => d.units),
+          backgroundColor: dailyData.map((d) => d.units === maxVal ? "#c0354a" : "#2ca05a"),
+          borderRadius: 7,
+          borderSkipped: false,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { family: "'Cabinet Grotesk', sans-serif", size: 11 } } },
+          y: { grid: { color: "rgba(26,122,69,0.07)" }, ticks: { callback: (v) => v + " kWh" } },
         },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { grid: { display: false }, ticks: { font: { family: "'Cabinet Grotesk', sans-serif", size: 11 } } },
-            y: { grid: { color: "rgba(26,122,69,0.07)" }, ticks: { callback: (v) => v + " kWh" } },
-          },
-        },
-      });
-    }
-
-    if (donutRef.current) {
-      donutChart.current = new Chart(donutRef.current, {
-        type: "doughnut",
-        data: {
-          labels: ["AC", "Fridge", "Light", "Fan", "TV"],
-          datasets: [{
-            data: [60, 16, 9, 7, 8],
-            backgroundColor: ["#1d5fa6", "#6d44b8", "#c47c0a", "#0a7a72", "#c0354a"],
-            borderWidth: 0,
-            hoverOffset: 5,
-          }],
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false, cutout: "68%",
-          plugins: {
-            legend: {
-              position: "right",
-              labels: { boxWidth: 10, padding: 10, font: { family: "'Cabinet Grotesk', sans-serif", size: 11 } },
-            },
-          },
-        },
-      });
-    }
-
-    return () => {
-      barChart.current?.destroy();
-      donutChart.current?.destroy();
-    };
+      },
+    });
+    return () => barInst.current?.destroy();
   }, [dailyData]);
+
+  // Donut chart
+  useEffect(() => {
+    if (donutInst.current) donutInst.current.destroy();
+    if (!donutRef.current) return;
+    donutInst.current = new Chart(donutRef.current, {
+      type: "doughnut",
+      data: {
+        labels: ["AC", "Fridge", "Light", "Fan", "TV"],
+        datasets: [{
+          data: [60, 16, 9, 7, 8],
+          backgroundColor: ["#1d5fa6", "#6d44b8", "#c47c0a", "#0a7a72", "#c0354a"],
+          borderWidth: 0,
+          hoverOffset: 5,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: "68%",
+        plugins: { legend: { position: "right", labels: { boxWidth: 10, padding: 10, font: { family: "'Cabinet Grotesk', sans-serif", size: 11 } } } },
+      },
+    });
+    return () => donutInst.current?.destroy();
+  }, []);
 
   return (
     <div className="page">
       {/* HERO */}
       <section className="premium-hero">
-        <img
-          className="hero-bg-img"
-          src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=1200&q=80&fit=crop"
-          alt="Energy landscape"
-        />
+        <img className="hero-bg-img" src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=1200&q=80&fit=crop" alt="Energy landscape" />
         <div className="hero-overlay-grad" />
         <div className="hero">
           <div className="hero-tag">Smart Energy Platform</div>
           <h1>EcoWatt Lite</h1>
           <p className="hero-text">Track usage · Predict demand · Cut carbon</p>
           <div className="hero-actions">
-            <NavLink to="/monitor">
-              <button className="primary-btn">
-                <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                Monitor
-              </button>
+            <NavLink to="/monitor" className="primary-btn">
+              <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Monitor
             </NavLink>
-            <NavLink to="/score">
-              <button className="secondary-btn">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-                Score
-              </button>
+            <NavLink to="/score" className="secondary-btn">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+              Score
             </NavLink>
           </div>
         </div>
@@ -235,7 +191,7 @@ export default function Home() {
       </div>
 
       {/* FLOW */}
-      <div className="premium-card" style={{ marginBottom: 0 }}>
+      <div className="premium-card">
         <div className="section-head">
           <div>
             <p className="section-tag">Workflow</p>
@@ -244,13 +200,13 @@ export default function Home() {
         </div>
         <div className="flow-row">
           {FLOW.map((f, i) => (
-            <>
-              <div key={i} className="flow-node">
-                <span className="flow-node-icon">{f.icon}</span>
+            <React.Fragment key={i}>
+              <div className="flow-node">
+                {f.icon}
                 <span>{f.label}</span>
               </div>
               {i < FLOW.length - 1 && <span className="flow-arrow">→</span>}
-            </>
+            </React.Fragment>
           ))}
         </div>
       </div>
